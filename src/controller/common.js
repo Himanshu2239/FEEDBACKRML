@@ -11,7 +11,7 @@ const getAdminAllData = async (req, res) => {
 
   try {
     let { date, dredger, startDate, endDate } = req.body;
-    console.log("date and dredger", date, dredger, startDate, endDate);
+    // console.log("date and dredger", date, dredger, startDate, endDate);
     const dredgerOptions = ["K7", "K9", "K14", "K15"];
     let matchFilter = {};
 
@@ -66,7 +66,7 @@ const getAdminAllData = async (req, res) => {
     //   if (dredger !== "All") matchFilter.dredger = dredger;
     // }
 
-    console.log("mathfilter", matchFilter);
+    // console.log("mathfilter", matchFilter);
 
     const surveyData = await SurveyWorkLog.aggregate([
       { $match: matchFilter },
@@ -175,13 +175,14 @@ const getAdminAllData = async (req, res) => {
       startOfMonth = new Date(date);
       startOfMonth.setDate(1);
       startDateForMonth = startOfMonth.toISOString().split("T")[0];
-    } else {
-      startDateForMonth = startDate;
-      date = endDate;
+      endDate = date;
+    }
+    else if(startDate && endDate){
+      startDateForMonth = startDate
     }
 
     const matchFilterForMonthdata = {
-      date: { $gte: startDateForMonth, $lte: date },
+      date: { $gte: startDateForMonth, $lte: endDate },
     };
 
     // If a dredger is selected, filter by dredger name
@@ -569,6 +570,160 @@ const getProductionDataBlockWise = async (req, res) => {
 //   }
 // };
 
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).replace(/ /g, " ");
+};
+
+
+const getDateWiseSurveyProductionData =  async (req, res) => {
+  try {
+    let {date, startDate, endDate, dredger } = req.body;
+    let filter = {};
+
+    // const formatDate = (dateStr) => {
+    //   const date = new Date(dateStr);
+    //   return date.toLocaleDateString("en-GB", {
+    //     day: "2-digit",
+    //     month: "short",
+    //     year: "numeric",
+    //   }).replace(/ /g, " ");
+    // };
+    
+    if (startDate && endDate) {
+      // Case 2: Fetch data within a date range in sorted order
+      if (new Date(startDate) > new Date(endDate)) {
+        [startDate, endDate] = [endDate, startDate]; // Ensure startDate is earlier
+      }
+      filter.date = { $gte: startDate, $lte: endDate };
+    } else if (date) {
+      // Case 1: Fetch from start of the month to the selected date in sorted order
+      const startOfMonth = date.slice(0, 7) + "-01"; // Extract year-month and append "-01"
+      filter.date = { $gte: startOfMonth, $lte: date };
+    }
+
+    if (dredger && dredger !== "All") {
+      filter.dredger = dredger; // Filter for a specific dredger
+    }
+
+    const workLogs = await SurveyWorkLog.find(filter).sort({ date: 1 }); // Sorting by date ascending
+
+    let responseData = [];
+    if (dredger === "All") {
+      // Aggregate total production per date if dredger === 'All'
+      const productionData = {};
+      workLogs.forEach(log => {
+        const production = log.forward * log.width * log.depth;
+        const formattedDate = formatDate(log.date);
+        // console.log("formattedDate", formattedDate);
+        if (!productionData[log.date]) {
+          productionData[log.date] = { date: formattedDate, production: 0, dredger: "All" };
+        }
+        productionData[log.date].production += production;
+      });
+      responseData = Object.values(productionData);
+    } else {
+      // Aggregate day and night shift production per dredger per date
+      const productionData = {};
+      workLogs.forEach(log => {
+        const production = log.forward * log.width * log.depth;
+        // const key = `${log.date}-${log.dredger}`;
+        const formattedDate = formatDate(log.date);
+        // console.log("formattedDate", formattedDate);
+        const key = `${formattedDate}-${log.dredger}`;
+     
+        // const key = `${formattedDate}-${log.dredger}`;
+        if (!productionData[key]) {
+          productionData[key] = { date: formattedDate, production: 0, dredger: log.dredger };
+        }
+        productionData[key].production += production;
+      });
+      responseData = Object.values(productionData);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("Error fetching production data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+
+const getDateWiseOperatorProductionData = async (req, res) => {
+  try {
+    let {date, startDate, endDate, dredger } = req.body;
+    // console.log("date, startDate, endDate, dredger ", date, startDate, endDate, dredger )
+    let filter = {};
+
+    if (startDate && endDate) {
+      if (new Date(startDate) > new Date(endDate)) {
+        [startDate, endDate] = [endDate, startDate];
+      }
+      filter.date = { $gte: startDate, $lte: endDate };
+    } else if (date) {
+      const startOfMonth = date.slice(0, 7) + "-01";
+      filter.date = { $gte: startOfMonth, $lte: date };
+      console.log("startOfMonth", startOfMonth)
+    }
+
+    if (dredger && dredger !== "All") {
+      filter.dredger = dredger; // Filter for a specific dredger
+    }
+
+    const operatorData = await operatorReport.find(filter).sort({ date: 1 });
+    let responseData = [];
+    const productionData = {};
+    // console.log("opratorData", operatorData);
+
+    operatorData.forEach(log => {
+      // console.log("log", log)
+      const production = log.workLog.forward * log.workLog.swing * log.workLog.depth;
+      // console.log("log.workLog.forward * log.workLog.swing * log.workLog.depth", log.workLog.forward * log.workLog.swing * log.workLog.depth)
+      const formattedDate = formatDate(log.date);
+      
+      if (!productionData[formattedDate]) {
+        productionData[formattedDate] = { date: formattedDate, production: 0 };
+      }
+      productionData[formattedDate].production += production;
+    });
+
+    responseData = Object.values(productionData);
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("Error fetching production data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+// const getDateWiseOperatorOilReport = async (req, res) => {
+//   let {date, startDate, endDate, dredger } = req.body;
+//   // console.log("date, startDate, endDate, dredger ", date, startDate, endDate, dredger )
+//   let filter = {};
+
+//   if (startDate && endDate) {
+//     if (new Date(startDate) > new Date(endDate)) {
+//       [startDate, endDate] = [endDate, startDate];
+//     }
+//     filter.date = { $gte: startDate, $lte: endDate };
+//   } else if (date) {
+//     const startOfMonth = date.slice(0, 7) + "-01";
+//     filter.date = { $gte: startOfMonth, $lte: date };
+//     console.log("startOfMonth", startOfMonth)
+//   }
+
+//   if (dredger && dredger !== "All") {
+//     filter.dredger = dredger; // Filter for a specific dredger
+//   }
+// }
+
+
+
 
 const serveyOilConsumed = async (req, res) => {
   try {
@@ -727,5 +882,7 @@ export {
   getDredgerTotalProduction,
   getProductionDataDykewise,
   getProductionDataBlockWise,
+  getDateWiseSurveyProductionData,
+  getDateWiseOperatorProductionData,
   serveyOilConsumed,
 };

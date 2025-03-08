@@ -397,12 +397,12 @@ const getOpeningBalance = async (req, res) => {
 
         // If no previous data is found, return dummy data
         const dummyData = [
-            { name: "H.S.D", OB: 100 },
-            { name: "15 W 40", OB: 150 },
-            { name: "H.Y.D.68", OB: 200 },
-            { name: "Grease", OB: 50 },
-            { name: "Coolant", OB: 75 },
-            { name: "Compound", OB: 120 },
+            { name: "H.S.D", OB: 0 },
+            { name: "15 W 40", OB: 0 },
+            { name: "H.Y.D.68", OB: 0 },
+            { name: "Grease", OB: 0 },
+            { name: "Coolant", OB: 0 },
+            { name: "Compound", OB: 0 },
         ];
 
         // return res.status(200).json({ oilOB: dummyData });
