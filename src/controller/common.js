@@ -176,9 +176,8 @@ const getAdminAllData = async (req, res) => {
       startOfMonth.setDate(1);
       startDateForMonth = startOfMonth.toISOString().split("T")[0];
       endDate = date;
-    }
-    else if(startDate && endDate){
-      startDateForMonth = startDate
+    } else if (startDate && endDate) {
+      startDateForMonth = startDate;
     }
 
     const matchFilterForMonthdata = {
@@ -420,8 +419,7 @@ const getProductionDataBlockWise = async (req, res) => {
 //     // Parse the input date (dd/mm/yyyy) and convert it to a Date object (UTC)
 //     const [day, month, year] = date.split("-");
 //     const givenDate = new Date(`${year}-${month}-${day}`).toISOString().split('T')[0];;
-    
-    
+
 //     console.log(givenDate);
 //     console.log(isNaN(givenDate));
 //     if (isNaN(givenDate)) {
@@ -549,7 +547,6 @@ const getProductionDataBlockWise = async (req, res) => {
 //       }
 //     });
 
-
 //     // Calculate the consumed oil volume:
 //     // Consumed = (today totalVolume - yesterday totalVolume) + (totalReceived - totalIssued)
 //     const consumed =
@@ -572,17 +569,18 @@ const getProductionDataBlockWise = async (req, res) => {
 
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).replace(/ /g, " ");
+  return date
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+    .replace(/ /g, " ");
 };
 
-
-const getDateWiseSurveyProductionData =  async (req, res) => {
+const getDateWiseSurveyProductionData = async (req, res) => {
   try {
-    let {date, startDate, endDate, dredger } = req.body;
+    let { date, startDate, endDate, dredger } = req.body;
     let filter = {};
 
     // const formatDate = (dateStr) => {
@@ -593,7 +591,7 @@ const getDateWiseSurveyProductionData =  async (req, res) => {
     //     year: "numeric",
     //   }).replace(/ /g, " ");
     // };
-    
+
     if (startDate && endDate) {
       // Case 2: Fetch data within a date range in sorted order
       if (new Date(startDate) > new Date(endDate)) {
@@ -616,12 +614,16 @@ const getDateWiseSurveyProductionData =  async (req, res) => {
     if (dredger === "All") {
       // Aggregate total production per date if dredger === 'All'
       const productionData = {};
-      workLogs.forEach(log => {
+      workLogs.forEach((log) => {
         const production = log.forward * log.width * log.depth;
         const formattedDate = formatDate(log.date);
         // console.log("formattedDate", formattedDate);
         if (!productionData[log.date]) {
-          productionData[log.date] = { date: formattedDate, production: 0, dredger: "All" };
+          productionData[log.date] = {
+            date: formattedDate,
+            production: 0,
+            dredger: "All",
+          };
         }
         productionData[log.date].production += production;
       });
@@ -629,16 +631,20 @@ const getDateWiseSurveyProductionData =  async (req, res) => {
     } else {
       // Aggregate day and night shift production per dredger per date
       const productionData = {};
-      workLogs.forEach(log => {
+      workLogs.forEach((log) => {
         const production = log.forward * log.width * log.depth;
         // const key = `${log.date}-${log.dredger}`;
         const formattedDate = formatDate(log.date);
         // console.log("formattedDate", formattedDate);
         const key = `${formattedDate}-${log.dredger}`;
-     
+
         // const key = `${formattedDate}-${log.dredger}`;
         if (!productionData[key]) {
-          productionData[key] = { date: formattedDate, production: 0, dredger: log.dredger };
+          productionData[key] = {
+            date: formattedDate,
+            production: 0,
+            dredger: log.dredger,
+          };
         }
         productionData[key].production += production;
       });
@@ -650,13 +656,11 @@ const getDateWiseSurveyProductionData =  async (req, res) => {
     console.error("Error fetching production data:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-}
-
-
+};
 
 const getDateWiseOperatorProductionData = async (req, res) => {
   try {
-    let {date, startDate, endDate, dredger } = req.body;
+    let { date, startDate, endDate, dredger } = req.body;
     // console.log("date, startDate, endDate, dredger ", date, startDate, endDate, dredger )
     let filter = {};
 
@@ -668,7 +672,7 @@ const getDateWiseOperatorProductionData = async (req, res) => {
     } else if (date) {
       const startOfMonth = date.slice(0, 7) + "-01";
       filter.date = { $gte: startOfMonth, $lte: date };
-      console.log("startOfMonth", startOfMonth)
+      console.log("startOfMonth", startOfMonth);
     }
 
     if (dredger && dredger !== "All") {
@@ -680,12 +684,13 @@ const getDateWiseOperatorProductionData = async (req, res) => {
     const productionData = {};
     // console.log("opratorData", operatorData);
 
-    operatorData.forEach(log => {
+    operatorData.forEach((log) => {
       // console.log("log", log)
-      const production = log.workLog.forward * log.workLog.swing * log.workLog.depth;
+      const production =
+        log.workLog.forward * log.workLog.swing * log.workLog.depth;
       // console.log("log.workLog.forward * log.workLog.swing * log.workLog.depth", log.workLog.forward * log.workLog.swing * log.workLog.depth)
       const formattedDate = formatDate(log.date);
-      
+
       if (!productionData[formattedDate]) {
         productionData[formattedDate] = { date: formattedDate, production: 0 };
       }
@@ -698,8 +703,7 @@ const getDateWiseOperatorProductionData = async (req, res) => {
     console.error("Error fetching production data:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-}
-
+};
 
 // const getDateWiseOperatorOilReport = async (req, res) => {
 //   let {date, startDate, endDate, dredger } = req.body;
@@ -723,160 +727,6 @@ const getDateWiseOperatorProductionData = async (req, res) => {
 // }
 
 
-
-
-const serveyOilConsumed = async (req, res) => {
-  try {
-   
-    const { date, dredger } = req.body;
-    if (!date) {
-      return res.status(400).json({ message: "Date is required" });
-    }
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid date format. Use yyyy-mm-dd" });
-    }
-
-   
-    const givenDateObj = new Date(date);
-    if (isNaN(givenDateObj.getTime())) {
-      return res.status(400).json({ message: "Invalid date provided" });
-    }
-
-    
-    const yesterdayObj = new Date(givenDateObj);
-    yesterdayObj.setDate(givenDateObj.getDate() - 1);
-
-
-    const year = yesterdayObj.getFullYear();
-    const month = String(yesterdayObj.getMonth() + 1).padStart(2, "0");
-    const day = String(yesterdayObj.getDate()).padStart(2, "0");
-    const yesterdayDateString = `${year}-${month}-${day}`;
-
-    const surveyToday = await SurveyOilReport.findOne({ date, dredger });
-    const surveyYesterday = await SurveyOilReport.findOne({
-      date: yesterdayDateString,
-      dredger,
-    });
-    if (!surveyToday || !surveyYesterday) {
-      return res.status(404).json({
-        message: "Survey oil report not found for one or both dates",
-      });
-    }
-
-    const operatorReports = await operatorReport.find({
-      date: yesterdayDateString,
-      dredger,
-    });
-
-    let totalReceived = 0;
-    let totalIssued = 0;
-
-    operatorReports.forEach((report) => {
-      if (Array.isArray(report.oilReport) && report.oilReport.length > 0) {
-        // Only take the 0th element in oilReport
-        totalReceived += report.oilReport[0].received || 0;
-        totalIssued += report.oilReport[0].issued || 0;
-      }
-    });
-
-  
-    // Consumed = (today totalVolume - yesterday totalVolume) + (totalReceived - totalIssued)
-    const consumed =
-      surveyToday.totalVolume -
-      surveyYesterday.totalVolume +
-      (totalReceived - totalIssued);
-
-    // if want, update the surveyToday document with the consumed value if needed
-    // surveyToday.consumed = consumed;
-    // await surveyToday.save();
-
-    return res.status(200).json({ consumed });
-  } catch (error) {
-    console.error("Error calculating consumed oil:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
-  }
-};
-
-
-
-// Suvey Oil report in getAdminAllData Controller
-
-//   let todaySurveyOil, previousSurveyOil;
-//   // console.log("dredger", dredger);/
-//   // if (dredger === "All") {
-//     todaySurveyOil = await SurveyOilReport.aggregate([
-//       { $match: matchFilter },
-//       { $group: { _id: null, totalVolume: { $sum: "$totalVolume" } } }
-//     ]);
-//     previousSurveyOil = await SurveyOilReport.aggregate([
-//       { $match: matchFilter },
-//       { $group: { _id: null, totalVolume: { $sum: "$totalVolume" } } },
-//       { $sort: { date: -1 } },
-//       { $limit: 1 }
-//     ]);
-//   // }
-
-//   let surveyOilConsumed = 0;
-//   if (previousSurveyOil && todaySurveyOil) {
-//     surveyOilConsumed = (previousSurveyOil.totalVolume - todaySurveyOil.totalVolume);
-//   }
-
-//   // console.log("todaySurveyOil", todaySurveyOil)
-
-//   // console.log("previousSurveyOil.totalVolume", previousSurveyOil[0].totalVolume);
-//   // console.log("todaySurveyOil.totalVolume", todaySurveyOil[0].totalVolume);
-
-//  const operatorOilReceived = await operatorReport.aggregate([
-//     { $match: matchFilter },
-//     { $unwind: "$oilReport" },
-//     { $match: { "oilReport.name": "H.S.D" } },
-//     {
-//       $group: {
-//         _id: "$date",
-//         totalHSDReceived: { $sum: "$oilReport.received" },
-//       },
-//     },
-//   ]);
-
-//   let operatorOilReceivedToday = operatorOilReceived.length > 0 ? operatorOilReceived[0].totalHSDReceived : 0;
-
-//   console.log("operatorOilReceivedToday", operatorOilReceivedToday)
-
-//   let totalSurveyOilConsumed = surveyOilConsumed + operatorOilReceivedToday;
-
-//   console.log("totalSurveyOilReport", totalSurveyOilConsumed)
-
-// const surveyOilToday = await SurveyOilReport.findOne({ date, dredger});
-
-// console.log("surveyOilToday",surveyOilToday)
-
-// let surveyOilConsumed = 0;
-// if (surveyOilToday) {
-//   const surveyOilPrevious = await SurveyOilReport.findOne({
-//     date: { $lt: date }, dredger
-//   }).sort({ date: -1 });
-
-//   console.log("surveyOilPrevious", surveyOilPrevious)
-
-//   if (surveyOilPrevious) {
-//     surveyOilConsumed = surveyOilPrevious.totalVolume - surveyOilToday.totalVolume;
-//   } else {
-//     const surveyOilLast10Days = await SurveyOilReport.findOne({
-//       date: { $lt: date },
-//       dredger,
-//     }).sort({ date: -1 });
-//     console.log("surveyOilLast10Days", surveyOilLast10Days)
-//     if (surveyOilLast10Days) {
-//       surveyOilConsumed = surveyOilLast10Days.totalVolume - surveyOilToday.totalVolume;
-//     }
-//   }
-// }
-
 export {
   getAdminAllData,
   getDredgerTotalProduction,
@@ -884,5 +734,4 @@ export {
   getProductionDataBlockWise,
   getDateWiseSurveyProductionData,
   getDateWiseOperatorProductionData,
-  serveyOilConsumed,
 };

@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }))
+app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
 // app.use(cors())
 
 app.use(express.json({ limit: `${MAX_LIMIT_OF_DATA}` })); //accept data : json format
@@ -15,17 +15,17 @@ app.use(express.urlencoded({ extended: true, limit: `${MAX_LIMIT_OF_DATA}` })); 
 app.use(express.static(`${STORE_STATIC_DATA}`)); //store  static data  in public folder.
 app.use(cookieParser());
 
-import surveyRoute from "./routes/survey.js"
-import operatorRoute from "./routes/operator.js"
-import userRoute from "./routes/user.js"
-import commonRoute from "./routes/common.js"
+import surveyRoute from "./routes/survey.js";
+import operatorRoute from "./routes/operator.js";
+import userRoute from "./routes/user.js";
+import commonRoute from "./routes/common.js";
+import adminRouter from "./routes/admin.js";
 
-
-app.use("/survey", surveyRoute)
-app.use("/operator", operatorRoute)
-app.use("/user", userRoute )
-app.use('/common',commonRoute)
-
+app.use("/survey", surveyRoute);
+app.use("/operator", operatorRoute);
+app.use("/user", userRoute);
+app.use("/common", commonRoute);
+app.use("/admin", adminRouter);
 
 //routes import
 // import authRouter from "./routes/Auth.js";
@@ -41,9 +41,4 @@ app.use('/common',commonRoute)
 // app.use("/production", productionRouter);
 // app.use("/common", commonRouter);
 
-
-
-
-
 export { app };
-
