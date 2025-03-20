@@ -1,24 +1,6 @@
 import SurveyWorkLog from "../models/survey.model.js";
 import SurveyOilReport from "../models/surveyOilReport.model.js";
 
-// const addSurveyData = async(req, res) => {
-//    try{
-//     const formData = req.body;
-//     console.log("formData", formData);
-//     const newWorkLog = new SurveyWorkLog(req.body);
-//     const savedWorkLog = await newWorkLog.save();
-//     res.status(201).json(savedWorkLog);
-//    }
-//    catch(error){
-//      console.log("Error to add data", error)
-//      res.status(500).json({
-//         success: false,
-//         message: "Internal server error while fetching orders.",
-//         error: error.message,
-//      })
-//    }
-// }
-
 const addSurveyData = async (req, res) => {
     try {
       const formData = req.body;

@@ -126,6 +126,7 @@ const fetchProductionDetailsForGivenDate = async (req, res) => {
         //   dredger: { $in: dredgerList },
         //   shift: { $in: ["Day", "Night"] },
         // });
+        
         let records;
         if (view === "Survey") {
           records = await SurveyWorkLog.find({

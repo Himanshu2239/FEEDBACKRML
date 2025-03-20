@@ -3,6 +3,7 @@ import { Router } from "express";
 import { verifyjwt } from "../middleware/auth.js";
 import {
   getAdminAllData,
+  getDateWiseOperatorOilConsumption,
   getDateWiseOperatorProductionData,
   getDateWiseSurveyProductionData,
   getDredgerTotalProduction,
@@ -22,6 +23,7 @@ router
 router
   .route("/getDateWiseOperatorProductionData")
   .post(getDateWiseOperatorProductionData);
+router.route('/getDateWiseOperatorOilConsumption').post(getDateWiseOperatorOilConsumption)
 
 // router.route('/addSurveyData').post(verifyjwt, addSurveyData);
 // router.route('/addSurveyOilReport').post(verifyjwt, addSurveyOilReport);
