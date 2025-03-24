@@ -24,6 +24,7 @@ const addOperatorReport = async (req, res) => {
             existingReport.workLog.depth = workLog.depth;
             existingReport.workLog.meReading = workLog.meReading;
             existingReport.workLog.aeReading = workLog.aeReading;
+            existingReport.workLog.lcReading = workLog.lcReading;
             existingReport.workLog.dgReading = workLog.dgReading;
             existingReport.workLog.entries = workLog.entries;
             existingReport.oilReport = oilReport;
@@ -44,6 +45,7 @@ const addOperatorReport = async (req, res) => {
                 depth: workLog.depth,
                 meReading: workLog.meReading,
                 aeReading: workLog.aeReading,
+                lcReading: workLog.lcReading,
                 dgReading: workLog.dgReading,
                 entries: workLog.entries,
             },
