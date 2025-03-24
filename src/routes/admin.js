@@ -15,7 +15,7 @@ router
   .route("/fetchProductionDetailsForGivenRange")
   .post(fetchProductionDetailsForGivenRange);
 
-router.route("/serveyOilConsumed").post(serveyOilConsumedForGivenDate);
+router.route("/serveyOilConsumedForGivenDate").post(serveyOilConsumedForGivenDate);
 router.route("/surveyOilConsumedForGivenRange").post(surveyOilConsumedForGivenRange);
 
 export default router;
