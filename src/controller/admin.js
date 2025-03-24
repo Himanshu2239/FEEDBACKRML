@@ -511,23 +511,23 @@ const serveyOilConsumedForGivenDate = async (req, res) => {
   }
 };
 
+
+
+
 const surveyOilConsumedForGivenRange = async (req, res) => {
   try {
-    const { startDate, endDate, view, dredger } = req.body;
+    const { startDate, endDate, dredger } = req.body;
+    const view = "Operator";
 
     // Validate required parameters and date formats
     if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ message: "startDate and endDate are required" });
+      return res.status(400).json({ message: "startDate and endDate are required" });
     }
     if (
       !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
       !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
     ) {
-      return res
-        .status(400)
-        .json({ message: "Invalid date format. Use yyyy-mm-dd" });
+      return res.status(400).json({ message: "Invalid date format. Use yyyy-mm-dd" });
     }
     const startObj = new Date(startDate);
     const endObj = new Date(endDate);
@@ -535,14 +535,11 @@ const surveyOilConsumedForGivenRange = async (req, res) => {
       return res.status(400).json({ message: "Invalid date provided" });
     }
     if (startObj > endObj) {
-      return res
-        .status(400)
-        .json({ message: "startDate cannot be after endDate" });
+      return res.status(400).json({ message: "startDate cannot be after endDate" });
     }
 
     // Determine dredger list
-    const dredgerList =
-      dredger === "All" ? ["K7", "K9", "K14", "K15"] : [dredger];
+    const dredgerList = dredger === "All" ? ["K7", "K9", "K14", "K15"] : [dredger];
 
     let overallCumulative = 0;
     let results = [];
@@ -558,98 +555,39 @@ const surveyOilConsumedForGivenRange = async (req, res) => {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // For each dredger, iterate over each date in the range
+    // Fetch all operator reports for the given dates and dredger list in one query
+    const allReports = await operatorReport.find({
+      date: { $in: dateArray },
+      dredger: { $in: dredgerList },
+      shift: { $in: ["Day", "Night"] },
+    })
+      .select("date dredger oilReport")
+      .lean();
+
+    // Group the reports by dredger and date for quick lookup
+    // Structure: { dredger: { date: totalConsumed } }
+    const groupedReports = {};
+    for (const report of allReports) {
+      const { date, dredger, oilReport } = report;
+      if (!groupedReports[dredger]) {
+        groupedReports[dredger] = {};
+      }
+      if (!groupedReports[dredger][date]) {
+        groupedReports[dredger][date] = 0;
+      }
+      // Sum the consumed value if available
+      if (Array.isArray(oilReport) && oilReport.length > 0) {
+        groupedReports[dredger][date] += oilReport[0].consumed || 0;
+      }
+    }
+
+    // Build results for each dredger using the grouped reports
     for (const d of dredgerList) {
       let dredgerTotal = 0;
       let dailyResults = [];
 
       for (const date of dateArray) {
-        let consumed = 0;
-
-        if (view === "Survey") {
-          // Calculate yesterday's date for current date
-          const givenDateObj = new Date(date);
-          const yesterdayObj = new Date(givenDateObj);
-          yesterdayObj.setDate(givenDateObj.getDate() - 1);
-          const yYear = yesterdayObj.getFullYear();
-          const yMonth = String(yesterdayObj.getMonth() + 1).padStart(2, "0");
-          const yDay = String(yesterdayObj.getDate()).padStart(2, "0");
-          const yesterdayDateString = `${yYear}-${yMonth}-${yDay}`;
-
-          // Fetch today's survey report for the given dredger
-          const surveyToday = await SurveyOilReport.findOne({
-            date: date,
-            dredger: d,
-          })
-            .select("totalVolume")
-            .lean();
-
-          // Fetch yesterday's survey report for the given dredger
-          const surveyYesterday = await SurveyOilReport.findOne({
-            date: yesterdayDateString,
-            dredger: d,
-          })
-            .select("totalVolume")
-            .lean();
-
-          // If any survey report is missing, record the error for that day
-          if (!surveyToday || !surveyYesterday) {
-            dailyResults.push({
-              date,
-              error: "Survey oil report not found for one or both dates",
-            });
-            continue;
-          }
-
-          // Fetch yesterday's operator reports for this dredger
-          const operatorReports = await operatorReport
-            .find({
-              date: yesterdayDateString,
-              dredger: d,
-              shift: { $in: ["Day", "Night"] },
-            })
-            .select("oilReport")
-            .lean();
-
-          let totalReceived = 0;
-          let totalIssued = 0;
-          operatorReports.forEach((report) => {
-            if (
-              Array.isArray(report.oilReport) &&
-              report.oilReport.length > 0
-            ) {
-              totalReceived += report.oilReport[0].received || 0;
-              totalIssued += report.oilReport[0].issued || 0;
-            }
-          });
-
-          consumed =
-            surveyToday.totalVolume -
-            surveyYesterday.totalVolume +
-            (totalReceived - totalIssued);
-        } else if (view === "Operator") {
-          // For Operator view, fetch operator reports for the given date and sum consumed
-          const operatorReports = await operatorReport
-            .find({
-              date: date,
-              dredger: d,
-              shift: { $in: ["Day", "Night"] },
-            })
-            .select("oilReport")
-            .lean();
-
-          operatorReports.forEach((report) => {
-            if (
-              Array.isArray(report.oilReport) &&
-              report.oilReport.length > 0
-            ) {
-              consumed += report.oilReport[0].consumed || 0;
-            }
-          });
-        } else {
-          return res.status(400).json({ message: "Invalid view provided" });
-        }
-
+        const consumed = (groupedReports[d] && groupedReports[d][date]) || 0;
         dredgerTotal += consumed;
         dailyResults.push({ date, consumed });
       }
@@ -665,11 +603,169 @@ const surveyOilConsumedForGivenRange = async (req, res) => {
     return res.status(200).json({ results, cumulative: overallCumulative });
   } catch (error) {
     console.error("Error calculating consumed oil for given range:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// const surveyOilConsumedForGivenRange = async (req, res) => {
+//   try {
+//     const { startDate, endDate, view, dredger } = req.body;
+
+//     // Validate required parameters and date formats
+//     if (!startDate || !endDate) {
+//       return res
+//         .status(400)
+//         .json({ message: "startDate and endDate are required" });
+//     }
+//     if (
+//       !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+//       !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ message: "Invalid date format. Use yyyy-mm-dd" });
+//     }
+//     const startObj = new Date(startDate);
+//     const endObj = new Date(endDate);
+//     if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
+//       return res.status(400).json({ message: "Invalid date provided" });
+//     }
+//     if (startObj > endObj) {
+//       return res
+//         .status(400)
+//         .json({ message: "startDate cannot be after endDate" });
+//     }
+
+//     // Determine dredger list
+//     const dredgerList =
+//       dredger === "All" ? ["K7", "K9", "K14", "K15"] : [dredger];
+
+//     let overallCumulative = 0;
+//     let results = [];
+
+//     // Build an array of dates in the range (inclusive)
+//     let currentDate = new Date(startObj);
+//     let dateArray = [];
+//     while (currentDate <= endObj) {
+//       const yyyy = currentDate.getFullYear();
+//       const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
+//       const dd = String(currentDate.getDate()).padStart(2, "0");
+//       dateArray.push(`${yyyy}-${mm}-${dd}`);
+//       currentDate.setDate(currentDate.getDate() + 1);
+//     }
+
+//     // For each dredger, iterate over each date in the range
+//     for (const d of dredgerList) {
+//       let dredgerTotal = 0;
+//       let dailyResults = [];
+
+//       for (const date of dateArray) {
+//         let consumed = 0;
+
+//         if (view === "Survey") {
+//           // Calculate yesterday's date for current date
+//           const givenDateObj = new Date(date);
+//           const yesterdayObj = new Date(givenDateObj);
+//           yesterdayObj.setDate(givenDateObj.getDate() - 1);
+//           const yYear = yesterdayObj.getFullYear();
+//           const yMonth = String(yesterdayObj.getMonth() + 1).padStart(2, "0");
+//           const yDay = String(yesterdayObj.getDate()).padStart(2, "0");
+//           const yesterdayDateString = `${yYear}-${yMonth}-${yDay}`;
+
+//           // Fetch today's survey report for the given dredger
+//           const surveyToday = await SurveyOilReport.findOne({
+//             date: date,
+//             dredger: d,
+//           })
+//             .select("totalVolume")
+//             .lean();
+
+//           // Fetch yesterday's survey report for the given dredger
+//           const surveyYesterday = await SurveyOilReport.findOne({
+//             date: yesterdayDateString,
+//             dredger: d,
+//           })
+//             .select("totalVolume")
+//             .lean();
+
+//           // If any survey report is missing, record the error for that day
+//           if (!surveyToday || !surveyYesterday) {
+//             dailyResults.push({
+//               date,
+//               error: "Survey oil report not found for one or both dates",
+//             });
+//             continue;
+//           }
+
+//           // Fetch yesterday's operator reports for this dredger
+//           const operatorReports = await operatorReport
+//             .find({
+//               date: yesterdayDateString,
+//               dredger: d,
+//               shift: { $in: ["Day", "Night"] },
+//             })
+//             .select("oilReport")
+//             .lean();
+
+//           let totalReceived = 0;
+//           let totalIssued = 0;
+//           operatorReports.forEach((report) => {
+//             if (
+//               Array.isArray(report.oilReport) &&
+//               report.oilReport.length > 0
+//             ) {
+//               totalReceived += report.oilReport[0].received || 0;
+//               totalIssued += report.oilReport[0].issued || 0;
+//             }
+//           });
+
+//           consumed =
+//             surveyToday.totalVolume -
+//             surveyYesterday.totalVolume +
+//             (totalReceived - totalIssued);
+//         } else if (view === "Operator") {
+//           // For Operator view, fetch operator reports for the given date and sum consumed
+//           const operatorReports = await operatorReport
+//             .find({
+//               date: date,
+//               dredger: d,
+//               shift: { $in: ["Day", "Night"] },
+//             })
+//             .select("oilReport")
+//             .lean();
+
+//           operatorReports.forEach((report) => {
+//             if (
+//               Array.isArray(report.oilReport) &&
+//               report.oilReport.length > 0
+//             ) {
+//               consumed += report.oilReport[0].consumed || 0;
+//             }
+//           });
+//         } else {
+//           return res.status(400).json({ message: "Invalid view provided" });
+//         }
+
+//         dredgerTotal += consumed;
+//         dailyResults.push({ date, consumed });
+//       }
+
+//       overallCumulative += dredgerTotal;
+//       results.push({
+//         dredger: d,
+//         totalConsumed: dredgerTotal,
+//         daily: dailyResults,
+//       });
+//     }
+
+//     return res.status(200).json({ results, cumulative: overallCumulative });
+//   } catch (error) {
+//     console.error("Error calculating consumed oil for given range:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Server error", error: error.message });
+//   }
+// };
 
 export {
   fetchProductionDetailsForGivenDate,
