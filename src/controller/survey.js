@@ -97,7 +97,7 @@ const addSurveyData = async (req, res) => {
   }
 };
 
-  const addSurveyOilReport = async (req, res) => {
+const addSurveyOilReport = async (req, res) => {
     try {
       const { date, dredger, tanks, totalVolume } = req.body;
   
