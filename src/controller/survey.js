@@ -1,50 +1,101 @@
 import SurveyWorkLog from "../models/survey.model.js";
 import SurveyOilReport from "../models/surveyOilReport.model.js";
 
-const addSurveyData = async (req, res) => {
-    try {
-      const formData = req.body;
-      const userId = req.user._id;
-      // console.log("user", user);
+// const addSurveyData = async (req, res) => {
+//     try {
+//       const formData = req.body;
+//       const userId = req.user._id;
+//       // console.log("user", user);
       
-      const { date, dredger,  shift } = formData; // Extract date and shift for checking
-      formData.userId = userId;
-      // Check if a record with the same date and shift exists
-      const existingWorkLog = await SurveyWorkLog.findOne({ date, dredger, shift });
+//       const { date, dredger,  shift } = formData; // Extract date and shift for checking
+//       formData.userId = userId;
+//       // Check if a record with the same date and shift exists
+//       const existingWorkLog = await SurveyWorkLog.findOne({ date, dredger, shift });
   
-      if (existingWorkLog) {
-        // If it exists, update the record
-        const updatedWorkLog = await SurveyWorkLog.findByIdAndUpdate(
-          existingWorkLog._id,
-          formData,
-          { new: true } // Return the updated document
-        );
+//       if (existingWorkLog) {
+//         // If it exists, update the record
+//         const updatedWorkLog = await SurveyWorkLog.findByIdAndUpdate(
+//           existingWorkLog._id,
+//           formData,
+//           { new: true } // Return the updated document
+//         );
   
-        return res.status(200).json({
-          success: true,
-          message: "Work log updated successfully.",
-          data: updatedWorkLog,
-        });
-      } else {
-        // If it doesn't exist, create a new one
-        const newWorkLog = new SurveyWorkLog(formData);
-        const savedWorkLog = await newWorkLog.save();
+//         return res.status(200).json({
+//           success: true,
+//           message: "Work log updated successfully.",
+//           data: updatedWorkLog,
+//         });
+//       } else {
+//         // If it doesn't exist, create a new one
+//         const newWorkLog = new SurveyWorkLog(formData);
+//         const savedWorkLog = await newWorkLog.save();
   
-        return res.status(201).json({
-          success: true,
-          message: "Work log created successfully.",
-          data: savedWorkLog,
-        });
-      }
-    } catch (error) {
-      console.error("Error adding/updating data:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error while adding/updating work log.",
-        error: error.message,
+//         return res.status(201).json({
+//           success: true,
+//           message: "Work log created successfully.",
+//           data: savedWorkLog,
+//         });
+//       }
+//     } catch (error) {
+//       console.error("Error adding/updating data:", error);
+//       return res.status(500).json({
+//         success: false,
+//         message: "Internal server error while adding/updating work log.",
+//         error: error.message,
+//       });
+//     }
+//   };
+
+const addSurveyData = async (req, res) => {
+  try {
+    const formData = req.body;
+    const userId = req.user._id;
+    formData.userId = userId;
+
+    const { date, dredger, shift, isNewEntry } = formData;
+
+    // If isNewEntry is true, create a new record without checking for duplicates
+    if (isNewEntry) {
+      const newWorkLog = new SurveyWorkLog(formData);
+      const savedWorkLog = await newWorkLog.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "New work log saved successfully.",
+        data: savedWorkLog,
       });
     }
-  };
+
+    // Check if a record with the same date, dredger, and shift exists
+    const existingWorkLog = await SurveyWorkLog.findOne({ date, dredger, shift });
+
+    if (existingWorkLog) {
+      return res.status(200).json({
+        success: false,
+        message: "A Survey work log already exists. Do you want to save a new entry?",
+        requireConfirmation: true,
+      });
+    }
+
+    // If no existing record, create a new one
+    const newWorkLog = new SurveyWorkLog(formData);
+    const savedWorkLog = await newWorkLog.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Survey work log submitted successfully!",
+      data: savedWorkLog,
+    });
+
+  } catch (error) {
+    console.error("Error adding work log:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while adding work log.",
+      error: error.message,
+    });
+  }
+};
 
   const addSurveyOilReport = async (req, res) => {
     try {
