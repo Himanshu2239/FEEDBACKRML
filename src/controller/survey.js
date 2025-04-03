@@ -8,11 +8,11 @@ const addSurveyData = async (req, res) => {
     const formData = { ...req.body, userId: req.user._id };
     const { date, dredger, shift, isNewEntry } = formData;
 
-    console.log("Received data:", { date, dredger, shift, isNewEntry });
+    // console.log("Received data:", { date, dredger, shift, isNewEntry });
 
     if (isNewEntry) {
       const savedWorkLog = await new SurveyWorkLog(formData).save();
-      console.log("New entry saved:", savedWorkLog);
+      // console.log("New entry saved:", savedWorkLog);
       return res.status(201).json({
         success: true,
         message: "New work log saved successfully.",
@@ -31,7 +31,8 @@ const addSurveyData = async (req, res) => {
     }
 
     const savedWorkLog = await new SurveyWorkLog(formData).save();
-    console.log("New survey log created:", savedWorkLog);
+
+    // console.log("New survey log created:", savedWorkLog);
 
     res.status(201).json({
       success: true,
@@ -51,7 +52,7 @@ const addSurveyData = async (req, res) => {
 
 const addSurveyOilReport = async (req, res) => {
     try {
-      const { date, dredger, tanks, totalVolume } = req.body;
+      const { date, dredger, tanks, totalVolume, time, remark } = req.body;
   
       if (!date || !dredger || !tanks || typeof totalVolume !== 'number') {
         return res.status(400).json({ message: 'Missing required fields.' });
@@ -66,11 +67,13 @@ const addSurveyOilReport = async (req, res) => {
         // Update existing record
         existingReport.tanks = tanks;
         existingReport.totalVolume = totalVolume;
+        existingReport.time = time
+        existingReport.remark = remark;
         await existingReport.save();
         return res.status(200).json({ message: 'Oil report updated successfully.', report: existingReport });
       } else {
         // Create a new record
-        const newReport = new SurveyOilReport({userId, date, dredger, tanks, totalVolume });
+        const newReport = new SurveyOilReport({userId, date, dredger, tanks, totalVolume, time, remark });
         await newReport.save();
         return res.status(201).json({ message: 'Oil report created successfully.', report: newReport });
       }
@@ -106,7 +109,7 @@ const addSurveyOilReport = async (req, res) => {
     const { dredger } = req.body;
   
     // Set default dredger to "K7" if none is provided
-    const selectedDredger = dredger || "K7";
+    const selectedDredger = dredger || "K7";  
   
     try {
       // Find all reports for the selected dredger

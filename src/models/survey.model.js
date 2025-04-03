@@ -17,6 +17,7 @@ const SurveyWorkLogSchema = new mongoose.Schema(
     depth: { type: Number, required: true },
     dyke: { type: String, enum: dykeOptions, required: true },
     block: { type: String, enum: blockOptions, required: true },
+    remark: { type: String}
   },
   {
     timestamps: true,
