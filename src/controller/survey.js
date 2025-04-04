@@ -61,7 +61,7 @@ const addSurveyOilReport = async (req, res) => {
       const userId = req.user._id;
   
       // Check if a record already exists for the given date and dredger
-      const existingReport = await SurveyOilReport.findOne({ date, dredger });
+      const existingReport = await SurveyOilReport.findOne({ date, dredger, time });
   
       if (existingReport) {
         // Update existing record
