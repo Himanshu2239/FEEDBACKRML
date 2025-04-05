@@ -52,9 +52,9 @@ const addSurveyData = async (req, res) => {
 
 const addSurveyOilReport = async (req, res) => {
     try {
-      const { date, dredger, tanks, totalVolume, time, remark } = req.body;
+      const { date, dredger, tanks, totalVolume, time, remark,totalVolumeOperator} = req.body;
   
-      if (!date || !dredger || !tanks || typeof totalVolume !== 'number') {
+      if (!date || !dredger || !tanks || typeof totalVolume !== 'number'|| typeof totalVolumeOperator !== 'number') {
         return res.status(400).json({ message: 'Missing required fields.' });
       }
 
@@ -67,13 +67,14 @@ const addSurveyOilReport = async (req, res) => {
         // Update existing record
         existingReport.tanks = tanks;
         existingReport.totalVolume = totalVolume;
+        existingReport.totalVolumeOperator = totalVolumeOperator;
         existingReport.time = time
         existingReport.remark = remark;
         await existingReport.save();
         return res.status(200).json({ message: 'Oil report updated successfully.', report: existingReport });
       } else {
         // Create a new record
-        const newReport = new SurveyOilReport({userId, date, dredger, tanks, totalVolume, time, remark });
+        const newReport = new SurveyOilReport({userId, date, dredger, tanks, totalVolume, time, remark,totalVolumeOperator });
         await newReport.save();
         return res.status(201).json({ message: 'Oil report created successfully.', report: newReport });
       }
@@ -81,8 +82,7 @@ const addSurveyOilReport = async (req, res) => {
       console.error(error);
       return res.status(500).json({ message: 'An error occurred.', error: error.message });
     }
-  }
-
+}
  const getSurveyData = async (req, res) => {
     try {
       // Fetch all data from the database
