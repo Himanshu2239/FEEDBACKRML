@@ -13,6 +13,7 @@ const OilReportSchema = new mongoose.Schema({
   dredger: { type: String, required: true },
   tanks: [TankSchema],
   totalVolume: { type: Number, required: true },
+  totalVolumeOperator: { type: Number, required: true },
   remark: {type: String}
 }, { timestamps: true });
 
