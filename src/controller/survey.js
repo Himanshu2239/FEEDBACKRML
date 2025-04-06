@@ -125,6 +125,42 @@ const addSurveyOilReport = async (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+   const deleteSurveyReport = async (req, res) => {
+    try {
+      const { id } = req.params;
+      await SurveyWorkLog.findByIdAndDelete(id);
+      res.status(200).json({ message: "Survey deleted successfully." });
+    } catch (error) {
+      console.error("Delete Survey Error:", error);
+      res.status(500).json({ message: "Failed to delete survey." });
+    }
+  }
+
+    const editSurveyReport =  async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updatedData = req.body;
+    
+        const updatedSurvey = await SurveyWorkLog.findByIdAndUpdate(
+          id,
+          updatedData,
+          { new: true, runValidators: true }
+        );
+    
+        if (!updatedSurvey) {
+          return res.status(404).json({ message: "Survey not found." });
+        }
+    
+        res.status(200).json({
+          message: "Survey updated successfully.",
+          data: updatedSurvey,
+        });
+      } catch (error) {
+        console.error("Update Survey Error:", error);
+        res.status(500).json({ message: "Failed to update survey." });
+      }
+    }
   
 
 
@@ -132,5 +168,7 @@ export {
    addSurveyData,
    addSurveyOilReport,
    getSurveyData,
-   getSurveyOilReport
+   getSurveyOilReport,
+   deleteSurveyReport,
+   editSurveyReport
 };
