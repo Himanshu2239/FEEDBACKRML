@@ -6,24 +6,12 @@ import { ApiError } from "../utils/apierror.js";
 
 const userSchema = new Schema(
   {
-    jobId: {
+    employeeId: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
       trim: true,
       index: true, // enable searching on this field
-    },
-    fullName: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-      index: true,
-    },
-    area: {
-      type: String,
-      trim: true,
-      lowercase: true,
     },
     password: {
       type: String,
@@ -31,16 +19,7 @@ const userSchema = new Schema(
     },
     refreshToken: {
       type: String,
-    },
-    role: {
-      type: String,
-    //   enum: APPLICATION_ROLE, // Ensure 'production' is included in APPLICATION_ROLE
-      required: true,
-    },
-    totalTargetCompleted: {
-      type: Number,
-      default: 0,
-    },
+    }
   },
   { timestamps: true }
 );
@@ -99,7 +78,7 @@ userSchema.methods.generateAccessToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
-      jobId: this.jobId,
+      employeeId: this.employeeId,
       fullName: this.fullName,
       role: this.role,
     },

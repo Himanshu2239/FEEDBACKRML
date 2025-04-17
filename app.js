@@ -5,7 +5,7 @@ process.env.TZ = "Asia/Calcutta";
 // import { listen } from "express/lib/application";
 import { connectDB } from "./src/db/db.js";
 import { app } from "./src/server.js";
-// import { jobIds } from "./src/constant.js";
+// import { employeeIds } from "./src/constant.js";
 
 dotenv.config({ path: "./.env" });
 // console.log("MongoDb address",process.env.MONGO_DB);

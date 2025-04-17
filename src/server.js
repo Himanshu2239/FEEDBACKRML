@@ -15,30 +15,66 @@ app.use(express.urlencoded({ extended: true, limit: `${MAX_LIMIT_OF_DATA}` })); 
 app.use(express.static(`${STORE_STATIC_DATA}`)); //store  static data  in public folder.
 app.use(cookieParser());
 
-import surveyRoute from "./routes/survey.js";
-import operatorRoute from "./routes/operator.js";
 import userRoute from "./routes/user.js";
-import commonRoute from "./routes/common.js";
-import adminRouter from "./routes/admin.js";
+import employeeRoute from "./routes/employee.js"
 
-app.use("/survey", surveyRoute);
-app.use("/operator", operatorRoute);
 app.use("/user", userRoute);
-app.use("/common", commonRoute);
-app.use("/admin", adminRouter);
+app.use("/employee", employeeRoute)
 
-//routes import
-// import authRouter from "./routes/Auth.js";
-// import userRouter from "./routes/user.js";
+
+// import { User } from "./models/user.model.js";
+// import Employee from "./models/employee.model.js";
+ 
+
+// const cleanUsersToOnlyReportingHeads = async () => {
+//   try {
+//     // Step 1: Get all reportingHead strings from Employee DB
+//     const employees = await Employee.find({ reportingHead: { $ne: null } });
+
+//     // console.log("employee and length", employees, employees.length);
+
+//     // Step 2: Extract employeeIds from reportingHead using regex
+//     const reportingHeadIds = new Set();
+
+//     employees.forEach((emp) => {
+
+//     //   const regex = new RegExp(`\\(${headId}\\)$`);
+//       const match = emp.reportingHead.match(/\(([^)]+)\)/);
+//       console.log("match", match);
+
+//       if (match && match[1]) {
+//         reportingHeadIds.add(match[1]);
+//       }
+//     });
+
+//     const reportingHeadArray = Array.from(reportingHeadIds);
+
+//     const matchedUsers = await User.find({
+//         employeeId: { $in: reportingHeadArray },
+//       });
+  
+//       console.log(`✅ Total reporting heads in Employee DB: ${reportingHeadArray.length}`);
+//       console.log(`✅ Reporting heads found in User DB: ${matchedUsers.length}`);
+
+//     // Step 3: Delete users whose employeeId is NOT in reportingHeadIds
+//     // const result = await User.deleteMany({
+//     //   employeeId: { $nin: Array.from(reportingHeadIds) }
+//     // });
+
+//     // console.log(`Deleted ${result.deletedCount} users. Only reporting heads are kept.`);
+//   } catch (error) {
+//     console.error('Error while cleaning User DB:', error);
+//   }
+// };
+
+// // Call the function (you can trigger it from an API or a script)
+// cleanUsersToOnlyReportingHeads();
+
+
+
+
 // import adminRouter from "./routes/admin.js";
-// import productionRouter from "./routes/production.js";
-// import commonRouter from "./routes/common.js";
 
-// //routes declaration
-// app.use("/auth", authRouter);
-// app.use("/user", userRouter);
 // app.use("/admin", adminRouter);
-// app.use("/production", productionRouter);
-// app.use("/common", commonRouter);
 
 export { app };
