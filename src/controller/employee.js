@@ -124,9 +124,9 @@ const addFeedBackMasterData = async (req, res) => {
         communicationSkills,
         attendancePunctuality,
         areasForImprovement,
-        trainingRecommendations,
+        // trainingRecommendations,
         confirmationStatus,
-        rationale,
+        // rationale,
         remarks
       ] = row.fields;
 
@@ -159,9 +159,9 @@ const addFeedBackMasterData = async (req, res) => {
         communicationSkills,
         attendancePunctuality,
         areasForImprovement,
-        trainingRecommendations,
+        // trainingRecommendations,
         confirmationStatus,
-        rationale,
+        // rationale,
         remarks,
       };
     });

@@ -30,9 +30,9 @@ const FeedbackSchema = new mongoose.Schema({
   communicationSkills: String,
   attendancePunctuality: String,
   areasForImprovement: String,
-  trainingRecommendations: String,
+  // trainingRecommendations: String,
   confirmationStatus: String,
-  rationale: String,
+  // rationale: String,
   remarks: String,
   submittedAt: {
     type: Date,

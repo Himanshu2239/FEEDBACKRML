@@ -17,6 +17,7 @@ app.use(cookieParser());
 
 import userRoute from "./routes/user.js";
 import employeeRoute from "./routes/employee.js"
+import Employee from "./models/employee.model.js";
 
 app.use("/user", userRoute);
 app.use("/employee", employeeRoute)
@@ -69,6 +70,42 @@ app.use("/employee", employeeRoute)
 
 // // Call the function (you can trigger it from an API or a script)
 // cleanUsersToOnlyReportingHeads();
+
+// async function removeDuplicateEmployees() {
+//     try {
+//       // Step 1: Find duplicate employeeIds
+//       const duplicates = await Employee.aggregate([
+//         {
+//           $group: {
+//             _id: "$employeeId",
+//             count: { $sum: 1 },
+//             ids: { $push: "$_id" }
+//           }
+//         },
+//         {
+//           $match: {
+//             count: { $gt: 1 }
+//           }
+//         }
+//       ]);
+  
+//       // Step 2: For each group of duplicates, delete all but one
+//       for (const dup of duplicates) {
+//         const [keepId, ...deleteIds] = dup.ids;
+  
+//         await Employee.deleteMany({ _id: { $in: deleteIds } });
+  
+//         console.log(`Kept employeeId ${dup._id}, deleted ${deleteIds.length} duplicate(s)`);
+//       }
+  
+//       console.log("Cleanup complete!");
+//     } catch (error) {
+//       console.error("Error cleaning up duplicates:", error);
+//     }
+//   }
+
+//   removeDuplicateEmployees();
+  
 
 
 
