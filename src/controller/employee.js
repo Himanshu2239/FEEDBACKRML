@@ -86,6 +86,98 @@ const getEmployeesByReportingHeadId = async (req, res) => {
   }
 };
 
+// const addFeedBackMasterData = async (req, res) => {
+//   const { data } = req.body;
+
+//   if (!Array.isArray(data) || data.length === 0) {
+//     return res.status(400).json({ message: "No data provided." });
+//   }
+
+//   try {
+//     const feedbackEntries = data.map(row => {
+//       const [
+//         slNo,
+//         employeeId,
+//         employeeName,
+//         businessUnit,
+//         department,
+//         designation,
+//         dateOfJoining,
+//         reportingHead,
+//         kra,
+//         kpi1Target,
+//         kpi1Achievement,
+//         kpi2Target,
+//         kpi2Achievement,
+//         kpi3Target,
+//         kpi3Achievement,
+//         kpi4Target,
+//         kpi4Achievement,
+//         kpi5Target,
+//         kpi5Achievement,
+//         overallKpiAchievement,
+//         knowledgeExpertise,
+//         attitudeApproach,
+//         initiativeProactivity,
+//         teamworkCollaboration,
+//         adaptabilityLearning,
+//         communicationSkills,
+//         attendancePunctuality,
+//         areasForImprovement,
+//         // trainingRecommendations,
+//         confirmationStatus,
+//         // rationale,
+//         remarks
+//       ] = row.fields;
+
+//       return {
+//         slNo,
+//         employeeId,
+//         employeeName,
+//         businessUnit,
+//         department,
+//         designation,
+//         dateOfJoining,
+//         reportingHead,
+//         kra,
+//         kpi1Target,
+//         kpi1Achievement,
+//         kpi2Target,
+//         kpi2Achievement,
+//         kpi3Target,
+//         kpi3Achievement,
+//         kpi4Target,
+//         kpi4Achievement,
+//         kpi5Target,
+//         kpi5Achievement,
+//         overallKpiAchievement,
+//         knowledgeExpertise,
+//         attitudeApproach,
+//         initiativeProactivity,
+//         teamworkCollaboration,
+//         adaptabilityLearning,
+//         communicationSkills,
+//         attendancePunctuality,
+//         areasForImprovement,
+//         // trainingRecommendations,
+//         confirmationStatus,
+//         // rationale,
+//         remarks,
+//       };
+//     });
+
+//     // Save all entries to the DB
+//     await feedbackMaterData.insertMany(feedbackEntries);
+
+//     return res.status(200).json({ message: "Feedback submitted successfully." });
+
+//   } catch (err) {
+//     console.error("Error saving feedback:", err);
+//     return res.status(500).json({ message: "Server error." });
+//   }
+// }
+
+
 const addFeedBackMasterData = async (req, res) => {
   const { data } = req.body;
 
@@ -94,7 +186,7 @@ const addFeedBackMasterData = async (req, res) => {
   }
 
   try {
-    const feedbackEntries = data.map(row => {
+    for (const row of data) {
       const [
         slNo,
         employeeId,
@@ -130,7 +222,7 @@ const addFeedBackMasterData = async (req, res) => {
         remarks
       ] = row.fields;
 
-      return {
+      const feedbackData = {
         slNo,
         employeeId,
         employeeName,
@@ -159,23 +251,29 @@ const addFeedBackMasterData = async (req, res) => {
         communicationSkills,
         attendancePunctuality,
         areasForImprovement,
-        // trainingRecommendations,
         confirmationStatus,
-        // rationale,
         remarks,
+        submittedAt: new Date()
       };
-    });
 
-    // Save all entries to the DB
-    await feedbackMaterData.insertMany(feedbackEntries);
+      // Check if employee feedback already exists
+      const existing = await feedbackMaterData.findOne({ employeeId });
 
-    return res.status(200).json({ message: "Feedback submitted successfully." });
+      if (existing) {
+        // Update existing record
+        await feedbackMaterData.updateOne({ employeeId }, feedbackData);
+      } else {
+        // Insert new record
+        await feedbackMaterData.create(feedbackData);
+      }
+    }
 
+    return res.status(200).json({ message: "Feedback processed successfully." });
   } catch (err) {
     console.error("Error saving feedback:", err);
     return res.status(500).json({ message: "Server error." });
   }
-}
+};
 
 
 
