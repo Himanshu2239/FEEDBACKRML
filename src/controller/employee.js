@@ -22,6 +22,7 @@ const fetchEmployeeDetailsByExcel = async (req, res) => {
       const excelDate = row['Date of Joining'];
 
       // Handle Excel date (serial or string)
+      
       let dateOfJoining = null;
       if (typeof excelDate === 'number') {
         // Convert Excel serial date to JS Date
