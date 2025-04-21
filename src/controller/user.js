@@ -46,7 +46,7 @@ const loginUser = asynchandler(async (req, res) => {
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
-    console.log("ispassword", isPasswordValid);
+    // console.log("ispassword", isPasswordValid);
 
     if (!isPasswordValid) {
       // console.log("password is not correct");
